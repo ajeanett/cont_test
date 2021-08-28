@@ -71,153 +71,78 @@ namespace ft{
 				bool operator() (const T& x, const T& y) const {return x<y;}
 			};
 	/**********NODE************/
-	template <class T1, class T2>
+	template <class Pair>
 			class 	node{
 			public:
-				pair<T1, T2> pair;
+				typedef typename Pair::first_type key_type;
+				Pair pair;
 				node *right;
 				node *left;
 				node *parent;
-//				node *end;
-				node() : pair(ft::pair<T1, T2>()), right(NULL), left(NULL), parent(NULL){}
-				node(const ft::pair<T1, T2> &pr) : pair(pr), right(NULL), left(NULL), parent(NULL){}
-				node(const node &copy) : pair(copy.pair), right(copy.right), left(copy.left), parent(copy.parent){}
+				node *end;
+				node(node *end = NULL) : pair(Pair()), right(NULL), left(NULL), parent(NULL), end(end) {}
+				node(const Pair &pr, node *end = NULL) : pair(pr), right(NULL), left(NULL), parent(NULL), end(end){}
+				node(const node &copy) : pair(copy.pair), right(copy.right), left(copy.left), parent(copy.parent), end(copy.end){}
 				~node(){}
-				bool operator>(const T1 &val)
+				bool operator>(const key_type &val)
 				{ return this->pair.first > val; }
-				bool operator<(const T1 &val)
+				bool operator<(const key_type &val)
 				{ return this->pair.first < val; }
-				bool operator==(const T1 &val)
+				bool operator==(const key_type &val)
 				{ return this->pair.first == val; }
-				bool operator!=(const T1 &val)
+				bool operator!=(const key_type &val)
 				{ return this->pair.first != val; }
-				bool operator<=(const T1 &val)
+				bool operator<=(const key_type &val)
 				{ return this->pair.first <= val; }
-				bool operator>=(const T1 &val)
+				bool operator>=(const key_type &val)
 				{ return this->pair.first >= val; }
 			};
 
-	template <class T1, class T2>
-	bool operator==(const node<T1,T2>& lhs, const node<T1,T2>& rhs)
+	template <class Pair>
+	bool operator==(const node<Pair>& lhs, const node<Pair>& rhs)
 	{ return rhs.pair.first == lhs.pair.first; }
 
-	template <class T1, class T2>
-	bool operator!=(const node<T1,T2>& lhs, const node<T1,T2>& rhs)
+	template <class Pair>
+	bool operator!=(const node<Pair>& lhs, const node<Pair>& rhs)
 	{ return rhs.pair.first != lhs.pair.first; }
 
-	template <class T1, class T2>
-	bool operator>(const node<T1,T2>& lhs, const node<T1,T2>& rhs)
+	template <class Pair>
+	bool operator>(const node<Pair>& lhs, const node<Pair>& rhs)
 	{ return rhs.pair.first < lhs.pair.first; }
 
-	template <class T1, class T2>
-	bool operator<(const node<T1,T2>& lhs, const node<T1,T2>& rhs)
+	template <class Pair>
+	bool operator<(const node<Pair>& lhs, const node<Pair>& rhs)
 	{ return rhs.pair.first > lhs.pair.first; }
 
-	template <class T1, class T2>
-	bool operator<=(const node<T1,T2>& lhs, const node<T1,T2>& rhs)
+	template <class Pair>
+	bool operator<=(const node<Pair>& lhs, const node<Pair>& rhs)
 	{ return rhs.pair.first >= lhs.pair.first; }
 
-	template <class T1, class T2>
-	bool operator>=(const node<T1,T2>& lhs, const node<T1,T2>& rhs)
+	template <class Pair>
+	bool operator>=(const node<Pair>& lhs, const node<Pair>& rhs)
 	{ return rhs.pair.first <= lhs.pair.first; }
 
 	/**********TREE************/
-	template < class Key, class T, class Alloc = std::allocator<node<Key,T> > >
+	template < class Node = ft::node<ft::pair<int, int> >, class Alloc = std::allocator<Node> >
 	class tree{
 	public:
-		typedef Key first_type;
-		typedef T second_type;
-		typedef node<first_type, second_type> node;
-		typedef ft::pair<first_type, second_type> pair;
+		typedef typename Node::key_type first_type;
+		typedef Node node;
 		typedef Alloc allocator_type;
-	private:
-		allocator_type _alloc;
+//	private:
+//		allocator_type _alloc;
 	public:
-		tree(const allocator_type& alloc = allocator_type()) : _alloc(alloc){}
+		tree(const allocator_type& alloc = allocator_type()){}
 		~tree(){}
-		node *create_node(pair &src){
+
+		static node *create_node(node &src, allocator_type _alloc){
 			node *_new = _alloc.allocate(1);
-			node	tmp(src);
-			_alloc.construct(_new, tmp);
+			_alloc.construct(_new, src); // конструктор ноды вызвать в map
 			return _new;
 		}
 
-		bool	insert(node **root, node *new_node, node *end){
-			if (*root == end)
-			{
-				*root = new_node;
-				end->parent = *root;
-			}
-			else
-			{
-				node * tmp = *root;
-				while (*tmp != *new_node)
-				{
-					if (*new_node < *tmp)
-					{
-						//go to left
-						if (tmp->left != NULL)
-							tmp = tmp->left;
-						else
-						{
-							tmp->left = new_node;
-							new_node->parent = tmp;
-							return true;
-						}
-					}
-					else if (*new_node > *tmp)
-					{
-						//go to right
-						if (tmp->right != NULL)
-							tmp = tmp->right;
-						else
-						{
-							tmp->right = new_node;
-							new_node->parent = tmp;
-							return true;
-						}
-					}
-				}
-				delete_node(new_node);
-				return false;
-			}
-			return true;
-		}
-
-		bool 	erase(node **root, first_type &key, node *end){
-			node *remove = find(root, key, end);
-			if (remove)
-			{
-
-
-				node*	replace = NULL;
-				if (remove->left)
-					replace = erase_left(remove, root);
-				else if (remove->right)
-					replace = erase_right(remove, root);
-				else
-					replace = erase_not_child(remove, root);
-				if (replace) {
-					remove->pair.first = replace->pair.first;
-					remove->pair.second = replace->pair.second;
-				}
-				else
-					replace = remove;
-				if (replace == remove && remove == *root) {
-					*root = NULL;
-					if (replace->end)
-						replace->end->parent = NULL;
-				}
-
-
-				delete_node(remove);
-				return true;
-			}
-			return false;
-		}
-
-		node	*find(node **root, first_type &key, node *end, bool is_create = false, pair *src = NULL){
-			if (*root != end)
+		node	*find(node **root, first_type &key, bool is_create = false){
+			if ((*root)->end != NULL)
 			{
 				node *tmp = *root;
 				while (tmp)
@@ -225,11 +150,15 @@ namespace ft{
 					if (key < *tmp)
 					{
 						//go to left
+						if (is_create == true && tmp->left == NULL)
+							return tmp;
 						tmp = tmp->left;
 					}
 					else if (key > *tmp)
 					{
 						//go to right
+						if (is_create == true && tmp->right == NULL)
+							return tmp;
 						tmp = tmp->right;
 					}
 					else if (key == *tmp)
@@ -237,20 +166,258 @@ namespace ft{
 						return tmp;
 					}
 				}
-				if (is_create)
-				{
-					node *new_node = create_node(*src);
-					insert(root, new_node, end);
-					return new_node;
-				}
 			}
 			return NULL;
+		}
+
+		bool	insert(node **root, node *new_node, allocator_type &_alloc){
+			node	*tmp = find(root, new_node->pair.first, true);
+			if (tmp == NULL)
+			{
+				*root = new_node;
+				new_node->end->parent = new_node; // root
+				new_node->end->left = new_node; // min node
+				new_node->end->right = new_node; // max node
+				return true;
+			}
+			else if (*tmp == *new_node)
+			{
+				delete_node(new_node, _alloc);
+			}
+			else if (*new_node > *tmp)
+			{
+				tmp->right = new_node;
+				if (tmp == max_node(tmp, true))
+				{
+					tmp->end->right = new_node; // новая нода становится максимальной
+				}
+				return true;
+			}
+			else if (*new_node < *tmp)
+			{
+				tmp->left = new_node;
+				if (tmp == min_node(tmp, true))
+				{
+					tmp->end->left = new_node; // новая нода становится минимальной
+				}
+				return true;
+			}
+			return false;
+		}
+
+		bool 	erase(node **root, first_type &key, allocator_type &_alloc){
+			node	*remove = find(root, key);
+			if (remove != NULL)
+			{
+				node	*replace = NULL;
+				if (remove->left != NULL)
+				{
+					replace = max_node(remove->left);
+					if (replace == remove->left)
+					{
+						replace->parent = remove->parent;
+						if (replace->parent != NULL)
+						{
+							if (replace->parent->right == remove)
+							{
+								/*Если удаляемый элемент был у парента справа*/
+								replace->parent->right = replace;
+							}
+							else
+							{
+								/*Если удаляемый элемент был у парента слева*/
+								replace->parent->left = replace;
+							}
+						}
+						replace->right = remove->right;
+						if (replace->right != NULL)
+						{
+							replace->right->parent = replace; // меняем парент у правой ветки с удаленной ноды на новую
+						}
+					}
+					else
+					{
+						/**/
+						replace->parent->right = replace->left; // соединяем левую ветку у реплейс с парентом реплейс, если она есть (у  replace правая ветка точно NULL, а левая может быть не NULL)
+						if (replace->left != NULL)
+						{
+							replace->left->parent = replace->parent; //на место replace ставим его левую ноду, чтобы они были двусвязны
+						}
+						replace->parent = remove->parent;
+						if (replace->parent != NULL) // поменяли не корень
+						{
+
+							if (replace->parent->right == remove)
+							{
+								/*Если удаляемый элемент был у парента справа*/
+								replace->parent->right = replace;
+							}
+							else
+							{
+								/*Если удаляемый элемент был у парента слева*/
+								replace->parent->left = replace;
+							}
+						}
+						replace->right = remove->right;
+						if (replace->right != NULL)
+						{
+							replace->right->parent = replace; // связали правую ветку с новой нодой replace
+						}
+						replace->left = remove->left;
+						if (replace->left != NULL)
+						{
+							replace->left->parent = replace; // связали левая ветку с новой нодой replace
+						}
+					}
+					/*Если remove максимальная нода, то максимальной становится replace*/
+					if (remove == max_node(remove, true))
+					{
+						remove->end->right = replace;
+					}
+				}
+				else if (remove->right != NULL)
+				{
+					replace = min_node(remove->right);
+					if (replace == remove->right)
+					{
+						replace->parent = remove->parent;
+						if (replace->parent != NULL) // не рут
+						{
+							if (replace->parent->right == remove)
+							{
+								/*Если удаляемый элемент был у парента справа*/
+								replace->parent->right = replace;
+							}
+							else
+							{
+								/*Если удаляемый элемент был у парента слева*/
+								replace->parent->left = replace;
+							}
+						}
+					}
+					else
+					{
+						/**/
+						replace->parent->left = replace->right; // соединяем правую ветку у реплейс с парентом реплейс, если она есть (у  replace левая ветка точно NULL, а правая может быть не NULL)
+						if (replace->right != NULL)
+						{
+							replace->right->parent = replace->parent; //на место replace ставим его левую ноду, чтобы они были двусвязны
+						}
+						replace->parent = remove->parent;
+						if (replace->parent != NULL) // поменяли не корень
+						{
+							if (replace->parent->right == remove)
+							{
+								/*Если удаляемый элемент был у парента справа*/
+								replace->parent->right = replace;
+							}
+							else
+							{
+								/*Если удаляемый элемент был у парента слева*/
+								replace->parent->left = replace;
+							}
+						}
+						replace->right = remove->right;
+						if (replace->right != NULL)
+						{
+							replace->right->parent = replace; // связали правую ветку с новой нодой replace
+						}
+					}
+					/*Если remove минимальная нода, то минимальной становится replace*/
+					if (remove == min_node(remove, true))
+					{
+						remove->end->left = replace;
+					}
+				}
+				else // если у remove нет детей
+				{
+					replace = remove->parent;
+					if (replace != NULL) // не рут
+					{
+						if (replace->right == remove)
+						{
+							/*Если удаляемый элемент был у парента справа*/
+							replace->right = NULL;
+						}
+						else
+						{
+							/*Если удаляемый элемент был у парента слева*/
+							replace->left = NULL;
+						}
+					}
+					if (remove == max_node(remove, true))
+					{
+						remove->end->right = remove->parent;
+					}
+					else if (remove == min_node(remove, true))
+					{
+						remove->end->left = remove->parent;
+					}
+				}
+				if (remove == *root)
+				{
+					if (replace != NULL)
+					{
+						*root = replace;
+						replace->end->parent = replace;
+					}
+					else
+					{
+						*root = remove->end; // мы удалили единственную ноду
+						(*root)->parent = NULL;
+						(*root)->left = NULL;
+						(*root)->right = NULL;
+					}
+				}
+				delete_node(remove, _alloc);
+				return true;
+			}
+			return false;
+
+
+
+
+//			node *remove = find(root, key, end);
+//
+//			if (remove == NULL)
+//			{
+//				//что делать?
+//				return false;
+//			}
+//			if (remove)
+//			{
+//				if ((remove->left == NULL || remove->left == end) && (remove->right == NULL || remove->right == end )) // нет child
+//				{
+//
+//				}
+//				node*	replace = NULL;
+//				if (remove->left)
+//					replace = erase_left(remove, root);
+//				else if (remove->right)
+//					replace = erase_right(remove, root);
+//				else
+//					replace = erase_not_child(remove, root);
+//				if (replace) {
+//					remove->pair.first = replace->pair.first;
+//					remove->pair.second = replace->pair.second;
+//				}
+//				else
+//					replace = remove;
+//				if (replace == remove && remove == *root) {
+//					*root = NULL;
+//					if (replace->end)
+//						replace->end->parent = NULL;
+//				}
+//				delete_node(remove);
+//				return true;
+//			}
+//			return false;
 		}
 
 		node	*min_node(node *now_node, bool is_root = false){
 			if (is_root == true)
 			{
-				now_node = get_root(now_node);
+				return now_node->end->left;
 			}
 			while (now_node->left != NULL)
 			{
@@ -262,7 +429,7 @@ namespace ft{
 		node	*max_node(node *now_node, bool is_root = false){
 			if (is_root == true)
 			{
-				now_node = get_root(now_node);
+				return now_node->end->right;
 			}
 			while (now_node->right != NULL)
 			{
@@ -273,33 +440,23 @@ namespace ft{
 
 		/*decrement*/
 		node	*max_to_min(node *now_node){
-			if (get_root(now_node) != end)
-			{
-				if (now_node == end)
-				{
-					now_node = max_node(now_node, true);
-				}
-			}
 			return now_node;
 		}
 
 		/*increment*/
 		node	*min_to_max(node *now_node){
+			return now_node;
 		}
 
 		void	clear(node *now_node){
 		}
 
-		size_t max_size(){
+		size_t max_size(allocator_type &_alloc){
+			return _alloc.max_size();
 		}
 
 		node	*get_root(node *now_node){
-
-			while (now_node->parent != NULL)
-			{
-				now_node = now_node->parent;
-			}
-			return  now_node;
+			return  now_node->end->parent;
 		}
 
 		void 	delete_node(node *n){
