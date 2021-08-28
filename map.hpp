@@ -246,7 +246,6 @@ namespace ft{
 						replace->parent = remove->parent;
 						if (replace->parent != NULL) // поменяли не корень
 						{
-
 							if (replace->parent->right == remove)
 							{
 								/*Если удаляемый элемент был у парента справа*/
@@ -373,45 +372,6 @@ namespace ft{
 				return true;
 			}
 			return false;
-
-
-
-
-//			node *remove = find(root, key, end);
-//
-//			if (remove == NULL)
-//			{
-//				//что делать?
-//				return false;
-//			}
-//			if (remove)
-//			{
-//				if ((remove->left == NULL || remove->left == end) && (remove->right == NULL || remove->right == end )) // нет child
-//				{
-//
-//				}
-//				node*	replace = NULL;
-//				if (remove->left)
-//					replace = erase_left(remove, root);
-//				else if (remove->right)
-//					replace = erase_right(remove, root);
-//				else
-//					replace = erase_not_child(remove, root);
-//				if (replace) {
-//					remove->pair.first = replace->pair.first;
-//					remove->pair.second = replace->pair.second;
-//				}
-//				else
-//					replace = remove;
-//				if (replace == remove && remove == *root) {
-//					*root = NULL;
-//					if (replace->end)
-//						replace->end->parent = NULL;
-//				}
-//				delete_node(remove);
-//				return true;
-//			}
-//			return false;
 		}
 
 		node	*min_node(node *now_node, bool is_root = false){
@@ -440,15 +400,71 @@ namespace ft{
 
 		/*decrement*/
 		node	*max_to_min(node *now_node){
+			if (now_node != NULL)
+			{
+				if (now_node->end == NULL) // если это end нода, то меняем на максимальную ноду
+				{
+					if (now_node->parent != NULL) // если end нода не является рутом (т.е. в мапе есть хоть одна обычная нода)
+					{
+						now_node = now_node->right;
+					}
+				}
+				else if (now_node == min_node(now_node, true)) // если это минимальная нода, то меняем на end ноду
+				{
+					now_node = now_node->end;
+				}
+				else if (now_node->left != NULL)
+				{
+					now_node = max_node(now_node->left); // если левая ветка существует, то мы ищем максимальную ноду слева
+				}
+				else if (now_node->parent != NULL)
+				{
+					while (now_node->parent->left == now_node) // пока леавя ветка парент равна текущей ноде, мы меняем текущую ноду на парент. Как только текущая нода будет справа у парент, то мы последний раз меняем тек ноду на парент
+					{
+						now_node = now_node->parent;
+					}
+					now_node = now_node->parent;
+				}
+			}
 			return now_node;
 		}
 
 		/*increment*/
 		node	*min_to_max(node *now_node){
+			if (now_node != NULL)
+			{
+				if (now_node->end == NULL) // если это end нода, то меняем на минимальную ноду
+				{
+					if (now_node->parent != NULL) // если end нода не является рутом (т.е. в мапе есть хоть одна обычная нода)
+					{
+						now_node = now_node->left;
+					}
+				}
+				else if (now_node == max_node(now_node, true)) // если это максимальная нода, то меняем на end ноду
+				{
+					now_node = now_node->end;
+				}
+				else if (now_node->right != NULL)
+				{
+					now_node = min_node(now_node->right); // если правая ветка существует, то мы ищем минимальную ноду справа
+				}
+				else if (now_node->parent != NULL)
+				{
+					while (now_node->parent->right == now_node) // пока правая ветка парент равна текущей ноде, мы меняем текущую ноду на парент. Как только текущая нода будет слева у парент, то мы последний раз меняем тек ноду на парент
+					{
+						now_node = now_node->parent;
+					}
+					now_node = now_node->parent;
+				}
+			}
 			return now_node;
 		}
 
-		void	clear(node *now_node){
+		void	clear(node **root, allocator_type &_alloc){
+			while ((*root)->end != NULL)
+			{
+				erase(root, (*root)->pair.first, _alloc);
+			}
 		}
 
 		size_t max_size(allocator_type &_alloc){
@@ -459,7 +475,12 @@ namespace ft{
 			return  now_node->end->parent;
 		}
 
-		void 	delete_node(node *n){
+		void 	delete_node(node *n, allocator_type &_alloc){
+			if (n != NULL)
+			{
+				_alloc.destroy(n); // вызывает деструктор объекта(ноды)
+				_alloc.deallocate(n, 1); // освобождаем выделенную память
+			}
 		}
 	};
 
