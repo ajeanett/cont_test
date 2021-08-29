@@ -6,6 +6,7 @@
 #define TEST_VECTORITERATOR_HPP
 
 #include <iostream>
+#include "tree.hpp"
 
 namespace ft{
 
@@ -135,7 +136,7 @@ namespace ft{
 			return *this;
 		}
 
-		vectorIterator operator++ (int n)
+		vectorIterator operator++ (int)
 		{
 			vectorIterator tmp = *this;
 			++this->_ptr;
@@ -148,7 +149,7 @@ namespace ft{
 			return *this;
 		}
 
-		vectorIterator operator-- (int n)
+		vectorIterator operator-- (int)
 		{
 			vectorIterator tmp = *this;
 			--this->_ptr;
@@ -355,7 +356,7 @@ namespace ft{
 	template <class T>
 	bool operator<  (const reverseIterator<T>& lhs, const reverseIterator<T>& rhs)
 	{
-		return (lhs.base()  < rhs.base());
+		return (lhs.base()  > rhs.base());
 	}
 
 	template <class T>
@@ -375,7 +376,107 @@ namespace ft{
 		return (!(lhs < rhs));
 	}
 
+	/**
+	* MapIterator
+	* */
+	template<typename T>
+	class mapIterator
+	{
+	private:
+		typedef iterator_traits<typename T::node_pair>	_traits_type;
+//		typedef tree
+	public:
+		typedef typename _traits_type::value_type			value_type;
+		typedef typename _traits_type::difference_type		difference_type	;
+		typedef typename _traits_type::pointer				pointer;
+		typedef typename _traits_type::reference			reference;
+		typedef typename std::bidirectional_iterator_tag  	iterator_category;
+		//		typedef T									value_type;
+		//		typedef std::ptrdiff_t						difference_type;
+		//		typedef value_type*							pointer;
+		//		typedef value_type&							reference;
+		//		typedef std::random_access_iterator_tag 	iterator_category;
+
+		mapIterator(){
+			_ptr = NULL;
+		}
+		mapIterator(T *src){
+			_ptr = src;
+		}
+		mapIterator(const mapIterator &src){
+
+			*this = src;
+		}
+		~mapIterator(){}
+		mapIterator& operator= (const mapIterator& x){
+			if (this != &x)
+			{
+				this->_ptr = x._ptr;
+			}
+			return *this;
+		}
+
+		pointer base() const{
+			return &this->_ptr.pair;
+		}
+
+		reference operator* ()
+		{
+			return _ptr->pair;
+		}
+
+		pointer operator-> ()
+		{
+			return this->base();
+		}
+
+		mapIterator& operator++ ()
+		{
+			ft::tree<T>::min_to_max(_ptr);
+			return *this;
+		}
+
+		mapIterator operator++ (int)
+		{
+			mapIterator tmp = *this;
+			ft::tree<T>::min_to_max(_ptr);
+			return tmp;
+		}
+
+		mapIterator& operator-- ()
+		{
+			ft::tree<T>::max_to_min(_ptr);
+			return *this;
+		}
+
+		mapIterator operator-- (int)
+		{
+			mapIterator tmp = *this;
+			ft::tree<T>::max_to_min(_ptr);
+			return tmp;
+		}
+
+	private:
+		T *_ptr; // T - это нода
+
+	};
+
+
+	template <class T>
+			bool operator== (const mapIterator<T>& lhs, const mapIterator<T>& rhs)
+			{
+				return (lhs.base() == rhs.base());
+			}
+
+	template <class T>
+			bool operator!= (const mapIterator<T>& lhs, const mapIterator<T>& rhs)
+			{
+				return (!(lhs == rhs));
+			}
 
 };
+
+
+
 
 #endif //TEST_VECTORITERATOR_HPP
