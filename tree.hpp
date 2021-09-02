@@ -66,6 +66,7 @@ namespace ft{
 	/**********LESS************/
 	template <class T>
 			class	less : std::binary_function <T,T,bool>{
+			public:
 				bool operator() (const T& x, const T& y) const {return x<y;}
 			};
 	/**********NODE************/
@@ -100,50 +101,76 @@ namespace ft{
 	template <class Pair>
 			bool operator==(const node<Pair>& lhs, const node<Pair>& rhs)
 			{ return rhs.pair.first == lhs.pair.first; }
+			
+	template <class Pair>
+			bool operator==(typename Pair::first_type lhs, const node<Pair>& rhs)
+			{ return rhs.pair.first == lhs; }
 
 	template <class Pair>
 			bool operator!=(const node<Pair>& lhs, const node<Pair>& rhs)
 			{ return rhs.pair.first != lhs.pair.first; }
+			
+	template <class Pair>
+			bool operator!=(typename Pair::first_type lhs, const node<Pair>& rhs)
+			{ return rhs.pair.first != lhs; }
 
 	template <class Pair>
 			bool operator>(const node<Pair>& lhs, const node<Pair>& rhs)
 			{ return rhs.pair.first < lhs.pair.first; }
+			
+	template <class Pair>
+			bool operator>(typename Pair::first_type lhs, const node<Pair>& rhs)
+			{ return rhs.pair.first < lhs; }
 
 	template <class Pair>
 			bool operator<(const node<Pair>& lhs, const node<Pair>& rhs)
 			{ return rhs.pair.first > lhs.pair.first; }
+			
+	template <class Pair>
+			bool operator<(typename Pair::first_type lhs, const node<Pair>& rhs)
+			{ return rhs.pair.first > lhs; }
 
 	template <class Pair>
 			bool operator<=(const node<Pair>& lhs, const node<Pair>& rhs)
 			{ return rhs.pair.first >= lhs.pair.first; }
+	
+	template <class Pair>
+			bool operator<=(typename Pair::first_type lhs, const node<Pair>& rhs)
+			{ return rhs.pair.first >= lhs; }
 
 	template <class Pair>
 			bool operator>=(const node<Pair>& lhs, const node<Pair>& rhs)
 			{ return rhs.pair.first <= lhs.pair.first; }
 
+	template <class Pair>
+			bool operator>=(typename Pair::first_type lhs, const node<Pair>& rhs)
+			{ return rhs.pair.first <= lhs; }
+
 	/**********TREE************/
-	template < class Node = ft::node<ft::pair<int, int> >, class Alloc = std::allocator<Node> >
+	template < class Node = ft::node<ft::pair< int, int> >, class Alloc = std::allocator<Node> >
 			class tree{
 			public:
 				typedef typename Node::key_type first_type;
 				typedef Node node;
 				typedef Alloc allocator_type;
+//				typedef	Key																	key_type;
+//				typedef pair<const typename checkConst<key_type>::_type ,mapped_type>		value_type;
 				//	private:
 				//		allocator_type _alloc;
 			public:
 				tree(const allocator_type& alloc = allocator_type()){}
 				~tree(){}
 
-				static node *create_node(node &src, allocator_type _alloc){
+				static node *create_node(node src, allocator_type &_alloc){
 					node *_new = _alloc.allocate(1);
 					_alloc.construct(_new, src); // конструктор ноды вызвать в map
 					return _new;
 				}
 
-				static node	*find(node **root, first_type &key, bool is_create = false){
-					if ((*root)->end != NULL)
+				static node	*find(node *root, first_type &key, bool is_create = false) {
+					if ((root)->end != NULL)
 					{
-						node *tmp = *root;
+						node *tmp = root;
 						while (tmp)
 						{
 							if (key < *tmp)
@@ -170,7 +197,7 @@ namespace ft{
 				}
 
 				static node *	insert(node **root, node *new_node, allocator_type &_alloc){
-					node	*tmp = find(root, new_node->pair.first, true);
+					node	*tmp = find(*root, new_node->pair.first, true);
 					if (tmp == NULL)
 					{
 						*root = new_node;
@@ -186,6 +213,7 @@ namespace ft{
 					else if (*new_node > *tmp)
 					{
 						tmp->right = new_node;
+						new_node->parent = tmp;
 						if (tmp == max_node(tmp, true))
 						{
 							tmp->end->right = new_node; // новая нода становится максимальной
@@ -195,17 +223,18 @@ namespace ft{
 					else if (*new_node < *tmp)
 					{
 						tmp->left = new_node;
+						new_node->parent = tmp;
 						if (tmp == min_node(tmp, true))
 						{
 							tmp->end->left = new_node; // новая нода становится минимальной
 						}
 						return new_node;
 					}
-					return NULL;//tmp;
+					return tmp;//tmp;
 				}
 
 				static bool 	erase(node **root, first_type &key, allocator_type &_alloc){
-					node	*remove = find(root, key);
+					node	*remove = find(*root, key);
 					if (remove != NULL)
 					{
 						node	*replace = NULL;
@@ -492,8 +521,8 @@ namespace ft{
 
 }
 
-namespace tree {
-	void f() {};
-}
+//namespace tree {
+//	void f() {};
+//}
 
 #endif //VECTOR_TREE_HPP

@@ -28,6 +28,32 @@ namespace ft{
 	template <> struct	is_integral<unsigned int> : std::true_type {};
 	template <> struct	is_integral<unsigned long int> : std::true_type {};
 	template <> struct	is_integral<unsigned long long int> : std::true_type {};
+	
+	template <class T>
+			struct is_iterator : std::false_type {};
+	template <> struct	is_iterator<std::random_access_iterator_tag> : std::true_type {};
+	template <> struct	is_iterator<std::bidirectional_iterator_tag> : std::true_type {};
+	template <> struct	is_iterator<std::forward_iterator_tag> : std::true_type {};
+	template <> struct	is_iterator<std::input_iterator_tag> : std::true_type {};
+	
+	/*****************HAS_INPUT_ITERATOR_TAG********************/
+//	template <class T>
+//			struct	is_outputiterator : std::false_type {};
+//	template <> struct	is_integral<bool> : std::true_type {};
+//	template <> struct	is_integral<char> : std::true_type {};
+//	template <> struct	is_integral<char16_t> : std::true_type {};
+//	template <> struct	is_integral<char32_t> : std::true_type {};
+//	template <> struct	is_integral<wchar_t> : std::true_type {};
+//	template <> struct	is_integral<signed char> : std::true_type {};
+//	template <> struct	is_integral<int> : std::true_type {};
+//	template <> struct	is_integral<short int> : std::true_type {};
+//	template <> struct	is_integral<long int> : std::true_type {};
+//	template <> struct	is_integral<long long int> : std::true_type {};
+//	template <> struct	is_integral<unsigned char> : std::true_type {};
+//	template <> struct	is_integral<unsigned short int> : std::true_type {};
+//	template <> struct	is_integral<unsigned int> : std::true_type {};
+//	template <> struct	is_integral<unsigned long int> : std::true_type {};
+//	template <> struct	is_integral<unsigned long long int> : std::true_type {};
 
 	/*****************ENABLE_IF********************/
 	template<bool Cond, class T = void> struct enable_if {};
@@ -43,7 +69,7 @@ namespace ft{
 		typedef const value_type&						const_reference;
 		typedef value_type*								pointer;
 		typedef const value_type*						const_pointer;
-		typedef vectorIterator<value_type >				iterator;
+		typedef vectorIterator<T>						iterator;
 		typedef vectorIterator<const typename checkConst<value_type>::_type>	const_iterator;
 		typedef reverseIterator<iterator>				reverse_iterator;
 		typedef reverseIterator<const_iterator>			const_reverse_iterator;
@@ -55,30 +81,33 @@ namespace ft{
 
 		/*default*/
 		explicit vector (const allocator_type& alloc = allocator_type()) :
-		_val(NULL), _capacity(0), _size(0), _allocator(alloc){
+		_val(NULL), _size(0), _capacity(0), _allocator(alloc){
 //			_val = new value_type;
-			_val = _allocator.allocate(0);
+//			_val = _allocator.allocate(0);
 		}
 
 		/*fill (2)*/
 		explicit vector (size_type n, const value_type& val = value_type(),
 						 const allocator_type& alloc = allocator_type()) :
-						 _val(NULL) , _size(0), _capacity(n) , _allocator(alloc){
+						 _val(NULL), _size(0), _capacity(0), _allocator(alloc){
 			//insert n элементов со значением val
-			_val = _allocator.allocate(n); //в insert будет allocate
-			insert(begin(), n, val);
+//			_val = _allocator.allocate(n); //в insert будет allocate
+//			insert(begin(), n, val);
+			assign(n, val);
 
 		}
 		/*range (3)*/
 		template <class InputIterator>
+//		vector (InputIterator first, InputIterator last,
+//				const allocator_type& alloc = allocator_type(), typename ft::enable_if<is_iterator<typename ft::iterator_traits<InputIterator>::iterator_category>::value, bool>::type = true)
+//				: _val(NULL) , _size(0), _capacity(0), _allocator(alloc){
 		vector (InputIterator first, InputIterator last,
-				const allocator_type& alloc = allocator_type(), typename ft::enable_if<!is_integral<InputIterator>::value, bool>::type = true)
+				const allocator_type& alloc = allocator_type(), char (*)[sizeof(*first)] = NULL)
 				: _val(NULL) , _size(0), _capacity(0), _allocator(alloc){
-					_val = _allocator.allocate(0); //в insert будет allocate
-					insert(begin(), first, last);
+					assign(first, last);
 		}
 		/*copy (4)*/
-		vector (const vector& x) :_val(NULL) ,  _capacity(0), _size(0){
+		vector (const vector& x) :_val(NULL) , _size(0), _capacity(0){
 			if (this != &x)
 			{
 				*this = x;
@@ -87,7 +116,7 @@ namespace ft{
 
 		~vector(){
 			// удалить массив
-			for (int i = 0; i < _size; ++i){
+			for (size_type i = 0; i < _size; ++i){
 				_allocator.destroy(&_val[i]);
 //				_allocator.destroy(_val+i); // альтернативный вариант
 			}
@@ -99,7 +128,7 @@ namespace ft{
 //			this->clear();
 			if (this != &x){
 				if (_val) {
-					for (int i = 0; i < _size; ++i){
+					for (size_type i = 0; i < _size; ++i){
 						_allocator.destroy(&_val[i]);
 					}
 					_allocator.deallocate(_val, _capacity);
@@ -116,8 +145,8 @@ namespace ft{
 		}
 
 		iterator begin(){
-//			return vectorIterator<T>(_val); //альтернативный вариант
-			return iterator(_val);
+			return vectorIterator<T>(_val); //альтернативный вариант
+//			return iterator(_val);
 		}
 		const_iterator begin() const{
 			return const_iterator(_val);
@@ -154,12 +183,13 @@ namespace ft{
 		}
 
 		void resize (size_type n, value_type val = value_type()){
-			if ( n <= _size)
+			if (n <= _size)
 			{
 				for (size_type i = _size; i > n; --i)
 				{
 					_allocator.destroy(&_val[i-1]);
 				}
+				_size = n;
 			}
 			else
 			{
@@ -180,7 +210,8 @@ namespace ft{
 					_new[i] = _val[i];
 					_allocator.destroy(&_val[i]);
 				}
-				_allocator.deallocate(_val, _capacity);
+				if (_capacity != 0)
+					_allocator.deallocate(_val, _capacity);
 				_capacity = n;
 				_val = _new;
 			}
@@ -226,9 +257,10 @@ namespace ft{
 			return *(rbegin());
 		}
 
-//		range (1)
+//		range (1), char (*)[sizeof(*first)] = NULL
 		template <class InputIterator>
-		void assign (InputIterator first, InputIterator last, typename ft::enable_if<!is_integral<InputIterator>::value, bool>::type = true){
+//		void assign (InputIterator first, InputIterator last, typename ft::enable_if<!is_integral<InputIterator>::value, bool>::type = true){
+		void assign (InputIterator first, InputIterator last, char (*)[sizeof(*first)] = NULL){
 			clear();
 			insert(begin(), first, last);
 
@@ -247,55 +279,68 @@ namespace ft{
 		}
 //		fill (2)
 		void insert (iterator position, size_type n, const value_type& val){
-			reserve(_size + n);
+			if (n == 0)
+				return ;
 			size_type start_point = position - begin();
-			for (size_type i = _size - 1; i >= start_point; --i)
+			reserve(_size + n);
+			for (size_type i = _size + n; i > start_point; --i)
 			{
 //				value_type tmp = _val[i];
 //				_allocator.destroy(&_val[i]);
 //				_allocator.construct(&_val[i + n], tmp);
-				_allocator.construct(&_val[i + n], _val[i]);
-				if (i < (start_point + n))
+				if (i > (start_point + n))
 				{
-//					_allocator.construct(&_val[i], val);
-					_val[i] = val;
+					_allocator.construct(&_val[i - 1], _val[i - n - 1]);
+				}
+				else
+				{
+					if (i >= _size)
+						_allocator.construct(&_val[i - 1], val);
+					else
+						_val[i - 1] = val;
 				}
 			}
 			_size += n;
 		}
-//		range (3)
+//		range (3), char (*)[sizeof(*first)] = NULL
 		template <class InputIterator>
-		void insert (iterator position, InputIterator first, InputIterator last, typename ft::enable_if<!is_integral<InputIterator>::value, bool>::type = true){
+//		void insert (iterator position, InputIterator first, InputIterator last, typename ft::enable_if<!is_integral<InputIterator>::value, bool>::type = true){
+		void insert (iterator position, InputIterator first, InputIterator last, char (*)[sizeof(*first)] = NULL){
 			size_type n = ft::distance(first, last);
-			reserve(_size + n);
+			if (n == 0)
+				return ;
 			size_type start_point = position - begin();
-			for (size_type i = _size - 1; i >= start_point; --i)
+			reserve(_size + n);
+			for (size_type i = _size + n; i > start_point; --i)
 			{
 //				value_type tmp = _val[i];
 //				_allocator.destroy(&_val[i]);
 //				_allocator.construct(&_val[i + n], tmp);
-				_allocator.construct(&_val[i + n], _val[i]);
-				if (i < (start_point + n))
+				if (i > (start_point + n))
 				{
-//					_allocator.construct(&_val[i], *first);
+					_allocator.construct(&_val[i - 1], _val[i - n - 1]);
+				}
+				else
+				{
 					--last;
-					_val[i] = *last;
+					if (i >= _size)
+						_allocator.construct(&_val[i - 1], *last);
+					else
+						_val[i - 1] = *last;
 				}
 			}
 			_size += n;
 		}
 
 		void clear(){
-			for (int i = 0; i < _size; ++i){
+			for (size_type i = 0; i < _size; ++i){
 				_allocator.destroy(&_val[i]);
 			}
 			_size = 0;
 		}
 
 		void push_back (const value_type& val){
-			std::cout << "push1:" << std::endl;
 			insert(end(), 1, val);
-			std::cout << "push2:" << std::endl;
 		}
 
 		void pop_back(){
@@ -337,12 +382,9 @@ namespace ft{
 
 	private:
 		value_type * _val;
-		size_type	_capacity;
 		size_type	_size;
+		size_type	_capacity;
 		allocator_type _allocator;
-//		friend bool operator== (const stack<TStack,ContainerStack>& lhs, const stack<TStack,ContainerStack>& rhs);
-//		template <class TStack, class ContainerStack>
-//		friend bool operator<  (const stack<TStack,ContainerStack>& lhs, const stack<TStack,ContainerStack>& rhs);
 
 
 	};

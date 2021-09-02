@@ -18,6 +18,24 @@ namespace ft{
 				typedef typename Iter::reference	reference;
 				typedef typename Iter::iterator_category	iterator_category;
 			};
+	
+	template <class Pair>
+			struct	iterator_traits<ft::node<Pair> > {
+				typedef typename std::ptrdiff_t 	difference_type;
+				typedef typename ft::node<Pair>::node_pair	value_type;
+				typedef typename ft::node<Pair>::node_pair*	pointer;
+				typedef typename ft::node<Pair>::node_pair&	reference;
+				typedef typename std::random_access_iterator_tag	iterator_category;
+			};
+	
+	template <class Pair>
+			struct	iterator_traits<const ft::node<Pair> > {
+				typedef typename std::ptrdiff_t 	difference_type;
+				typedef typename ft::node<Pair>::node_pair	value_type;
+				typedef const typename ft::node<Pair>::node_pair*	pointer;
+				typedef const typename ft::node<Pair>::node_pair&	reference;
+				typedef typename std::random_access_iterator_tag	iterator_category;
+			};
 
 	template <class Iter>
 			struct	iterator_traits<Iter *> {
@@ -383,7 +401,7 @@ namespace ft{
 	class mapIterator
 	{
 	private:
-		typedef iterator_traits<typename T::node_pair>	_traits_type;
+		typedef iterator_traits<T>	_traits_type;
 //		typedef tree
 	public:
 		typedef typename _traits_type::value_type			value_type;
@@ -417,42 +435,42 @@ namespace ft{
 		}
 
 		pointer base() const{
-			return &this->_ptr.pair;
+			return &this->_ptr->pair;
 		}
 
-		reference operator* ()
+		reference operator* () const
 		{
 			return _ptr->pair;
 		}
 
-		pointer operator-> ()
+		pointer operator-> () const
 		{
 			return this->base();
 		}
 
 		mapIterator& operator++ ()
 		{
-			ft::tree<T>::min_to_max(_ptr);
+			_ptr = ft::tree<T>::min_to_max(_ptr);
 			return *this;
 		}
 
 		mapIterator operator++ (int)
 		{
 			mapIterator tmp = *this;
-			ft::tree<T>::min_to_max(_ptr);
+			_ptr = ft::tree<T>::min_to_max(_ptr);
 			return tmp;
 		}
 
 		mapIterator& operator-- ()
 		{
-			ft::tree<T>::max_to_min(_ptr);
+			_ptr = ft::tree<T>::max_to_min(_ptr);
 			return *this;
 		}
 
 		mapIterator operator-- (int)
 		{
 			mapIterator tmp = *this;
-			ft::tree<T>::max_to_min(_ptr);
+			_ptr = ft::tree<T>::max_to_min(_ptr);
 			return tmp;
 		}
 
